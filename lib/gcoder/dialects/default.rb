@@ -9,7 +9,7 @@ module GCoder
       map[:G] = {}
       map[:M] = {}
       map[:G][0] = :MoveRapid
-      map[:G][1] = :MoveByAFeedrate
+      map[:G][1] = :MoveByFeedrate
       map[:G][2] = :ClockwiseCircularArcAtFeedrate
       map[:G][3] = :CounterClockwiseCircularArcAtFeedrate
       map[:G][4] = :Dwell
@@ -33,9 +33,8 @@ module GCoder
       map[:G][43] = :ApplyToolLengthCompensationPlus
       map[:G][44] = :ApplyToolLengthCompensationMinus
       map[:G][49] = :ToolLengthCompensationCancel
-      map[:G][50] = :ResetAllScaleFactorsTo10
+      map[:G][50] = :ResetAllScaleFactorsTo1
       map[:G][51] = :TurnOnScaleFactors
-      map[:G][52] = :LocalWorkshiftForAllCoordinateSystemsAddXyzOffsets
       map[:G][53] = :MachineCoordinateSystem
       map[:G][54] = :WorkCoordinateSystem1stWorkpiece
       map[:G][55] = :WorkCoordinateSystem2ndWorkpiece
@@ -50,13 +49,13 @@ module GCoder
       map[:G][65] = :CustomMacroSimpleCall
       map[:G][68] = :CoordinateSystemRotation
       map[:G][69] = :CancelCoordinateSystemRotation
-      map[:G][73] = :HighSpeedDrillingCyclesmallRetract
+      map[:G][73] = :HighSpeedDrillingCycle
       map[:G][74] = :LeftHandTappingCycle
       map[:G][76] = :FineBoringCyle
       map[:G][80] = :CancelCannedCycle
       map[:G][81] = :SimpleDrillingCycle
-      map[:G][82] = :DrillingCycleWithDwellcounterboring
-      map[:G][83] = :PeckDrillingCyclefullRetract
+      map[:G][82] = :DrillingCycleWithDwell
+      map[:G][83] = :PeckDrillingCycle
       map[:G][84] = :TappingCycle
       map[:G][85] = :BoringCannedCycleNoDwellFeedOut
       map[:G][86] = :BoringCannedCycleSpindleStopRapidOut
@@ -64,9 +63,7 @@ module GCoder
       map[:G][88] = :BoringCannedCycleSpindleStopManualOut
       map[:G][89] = :BoringCannedCycleDwellFeedOut
       map[:G][90] = :AbsoluteProgrammingOfXYZ
-      map[:G][901] = :AbsoluteProgrammingIjktypeBAndCSystems
-      map[:G][91] = :IncrementalProgrammingOfXyztypeBAndCSystems
-      map[:G][911] = :IncrementalProgrammingIjktypeBAndCSystems
+      map[:G][91] = :IncrementalProgrammingOfXYZ
       map[:G][92] = :OffsetCoordinateSystemAndSaveParameters
       map[:G][921] = :CancelOffsetAndZeroParameters
       map[:G][922] = :CancelOffsetAndRetainParameters
@@ -78,7 +75,7 @@ module GCoder
       map[:G][98] = :ReturnToInitialZPlaneAfterCannedCycle
       map[:G][99] = :ReturnToInitialRPlaneAfterCannedCycle
       map[:M][0] = :ProgramStop
-      map[:M][1] = :OptionalStopOperatorSelectedToEnable
+      map[:M][1] = :ProgramStopOptional
       map[:M][2] = :EndOfProgram
       map[:M][3] = :SpindleOnCwRotation
       map[:M][4] = :SpindleOnCcwRotation

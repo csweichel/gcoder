@@ -1,7 +1,102 @@
+require 'delegate'
+
+class Object
+
+  #
+  # A combination of to_i and to_f.
+  # If this object is nil?, nil is returned.
+  # If this object is an integer, to_i is returned.
+  # If this object is a floating point number, to_f is returned.
+  #
+  def to_nif
+    if nil?
+      nil
+    elsif to_i.to_s == self
+      to_i
+    else
+      to_f
+    end
+  end
+
+end
 
 module GCoder
 
   module GCode
+
+    class ProgramContext < SimpleDelegator
+      attr_accessor :position, :feedrate, :units, :absolute
+
+      def initialize(position = [0,0,0], feedrate = 0, units = :mm, absolute = false)
+        super({})
+
+        @position = position
+        @feedrate = feedrate
+        @units = units
+        @absolute = absolute
+      end
+
+      def absolute?; absolute; end
+
+      def update_position(pos)
+        if absolute
+          @position = @position.each_with_index.map {|e, i| pos[i] || @position[i] }
+        else
+          @position = @position.each_with_index.map {|e, i| @position[i] + (pos[i] || 0) }
+        end
+      end
+
+      def update_feedrate(feedrate)
+        @feedrate = feedrate unless feedrate.nil?
+      end
+    end
+
+    class Program < SimpleDelegator
+      include GCoder::GCode
+
+      def initialize(commands)
+        super(commands)
+      end
+
+      #
+      # Interpretes aspects of the GCode program, namely position, feedrate, unit of measure
+      # and absolute/incremental positioning. This information is made available to the optional
+      # block as second parameter, through a ProgramContext instance.
+      #
+      # Returns an array with two elements, the mapping result and context.
+      #
+      #
+      def map_with_context(&block)
+        ctx = ProgramContext.new
+
+        map_result = self.map do |cmd|
+          if block_given?
+            r = yield(cmd, ctx)
+          else
+            r = cmd
+          end
+
+          if cmd.is_a? MoveRapid or cmd.is_a? MoveByFeedrate
+            ctx.update_position cmd.position
+            ctx.update_feedrate cmd.feedrate
+          elsif cmd.is_a? ProgramCoordinatesAreMm
+            ctx.units = :mm
+          elsif cmd.is_a? ProgramCoordinatesAreInches
+            ctx.units = :inch
+          elsif cmd.is_a? AbsoluteProgrammingOfXYZ
+            ctx.absolute = true
+          elsif cmd.is_a? IncrementalProgrammingOfXYZ
+            ctx.absolute = false
+          end
+
+          r
+        end
+
+        [map_result, ctx]
+      end
+
+
+    end
 
     class Command
       attr_reader :code, :args
@@ -18,6 +113,11 @@ module GCoder
     end
 
     class Comment < Command
+      # Returns the text of the comment without the parentheses
+      def text
+        code
+      end
+
       def to_s
         "(#{code})"
       end
@@ -27,8 +127,12 @@ module GCoder
     end
     class MotionCommand < Command
 
+      def position
+        [ args[:X], args[:Y], args[:Z] ].map {|x| x.to_nif }
+      end
+
       def feedrate
-        args[:F]
+        args[:F].to_nif
       end
 
     end
@@ -53,11 +157,11 @@ module GCoder
 
     class MoveRapid < MotionCommand
     end
-    class MoveByAFeedrate < MotionCommand
+    class MoveByFeedrate < MotionCommand
     end
     class ClockwiseCircularArcAtFeedrate < MotionCommand
     end
-    class CounterCclockwiseCircularArcAtFeedrate < MotionCommand
+    class CounterClockwiseCircularArcAtFeedrate < MotionCommand
     end
     class Dwell < MotionCommand
     end
@@ -80,6 +184,8 @@ module GCoder
     class ProgramCoordinatesAreMm < CoordinateCommand
     end
     class AbsoluteProgrammingOfXYZ < CoordinateCommand
+    end
+    class IncrementalProgrammingOfXYZ < CoordinateCommand
     end
     class ReferencePointReturnCheck < MotionCommand
     end
@@ -184,6 +290,8 @@ module GCoder
     class ReturnToInitialRPlaneAfterCannedCycle < CannedCommand
     end
     class ProgramStop < MCodeCommand
+    end
+    class ProgramStopOptional < MCodeCommand
     end
     class EndOfProgram < MCodeCommand
     end
